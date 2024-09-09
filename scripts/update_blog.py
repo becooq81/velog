@@ -36,9 +36,12 @@ for entry in feed.entries:
     # Create file if it doesn't exist
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-            # Add front matter with original title
+            # Properly escape special characters in the title
+            escaped_title = entry.title.replace(':', '&#58;').replace("'", "&#39;").replace('"', '&quot;')
+            
+            # Add front matter with escaped title
             front_matter = f"---\n"
-            front_matter += f'title: "{entry.title}"\n'
+            front_matter += f'title: "{escaped_title}"\n'
             front_matter += f"date: {entry.published}\n"
             front_matter += f"---\n\n"
             content = entry.description
