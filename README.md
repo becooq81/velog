@@ -5,7 +5,7 @@
 
 This repository contains a Python script for automatically updating a blog with posts from a Velog RSS feed. The script fetches new posts from the RSS feed and saves them as Markdown files in the repository. It then commits and pushes these updates to GitHub.
 
-The code in this repository is based on [rimgosu/velog](https://github.com/rimgosu/velog), with modifications made for improved readability and functionality.
+The content of this repository is based on [rimgosu/velog](https://github.com/rimgosu/velog), with modifications made for improved readability and instructions.
 
 ## Features
 
@@ -36,9 +36,10 @@ Edit the `scripts/update_blog.py` file to set the RSS feed URL for your Velog bl
 
 To automate updates, configure GitHub Actions:
 
-1. **Create a Personal Access Token (PAT)**: GitHub > Settings > Developer Settings > Personal access Tokens > Generate new token. Grant write packages privileges to the token. (Do not close the tab unless you completed the following steps. You cannot see the PAT again.)
-2. **Add the PAT to Repository Secrets**: In your Velog GitHub repository, navigate to Settings > Secrets and Variables > Actions and add a new secret named GH_PAT with your PAT.
-3. **Verify Workflow Configuration**: Ensure that the GitHub Actions workflow is configured correctly in `.github/workflows/update_blog.yml`.
+1. **Enable GitHub Actions Bot to write in your Repository**: Repository's Settings > Actions > General > Workflow Permissions > Choose 'Read and Write permissions'.
+2. **Create a Personal Access Token (PAT)**: GitHub > Settings > Developer Settings > Personal access Tokens > Generate new token. Grant write packages privileges to the token. (Do not close the tab unless you completed the following steps. You cannot see the PAT again.)
+3. **Add the PAT to Repository Secrets**: In your Velog GitHub repository, navigate to Settings > Secrets and Variables > Actions and add a new secret named GH_PAT with your PAT.
+4. **Verify Workflow Configuration**: Ensure that the GitHub Actions workflow is configured correctly in `.github/workflows/update_blog.yml`.
 
 ## GitHub Actions Workflow
 The provided GitHub Actions workflow is configured to run daily at midnight and performs the following steps:
