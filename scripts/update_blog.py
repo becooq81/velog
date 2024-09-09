@@ -2,7 +2,8 @@ import feedparser
 import git
 import os
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil import parser
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -30,12 +31,14 @@ feed = feedparser.parse(rss_url)
 
 # Save each post as a file and commit
 for entry in feed.entries:
-    # Adjust format for GMT
+    # Parse date string with dateutil.parser which handles various formats
     published_date_str = entry.published
     try:
-        published_date = datetime.strptime(published_date_str, '%a, %d %b %Y %H:%M:%S %Z')
-        # Manually adjust timezone to UTC
-        published_date = published_date.replace(tzinfo=datetime.timezone.utc)
+        published_date = parser.parse(published_date_str)
+        # Manually adjust to UTC if needed
+        if published_date.tzinfo is None:
+            # Assuming GMT or UTC if no timezone information is present
+            published_date = published_date.replace(tzinfo=datetime.timezone.utc)
     except ValueError:
         print(f"Date format error for entry published date: {published_date_str}")
         continue
