@@ -1,7 +1,7 @@
 import feedparser
 import git
 import os
-import urllib.parse
+import urllib.parse  # Import URL encoding library
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -10,10 +10,10 @@ rss_url = 'https://api.velog.io/rss/@becooq81'
 # GitHub repository path
 repo_path = '.'
 
-# 'velog-posts' directory path
-posts_dir = os.path.join(repo_path, 'velog-posts')
+# '_posts' directory path
+posts_dir = os.path.join(repo_path, '_posts')
 
-# Create 'velog-posts' if directory does not exist
+# Create '_posts' if directory does not exist
 if not os.path.exists(posts_dir):
     os.makedirs(posts_dir)
 
@@ -29,28 +29,21 @@ feed = feedparser.parse(rss_url)
 
 # Save each post as a file and commit
 for entry in feed.entries:
-    # Remove or replace invalid characters from file's name
+    # URL-encode the title to create a valid file name
     file_name = urllib.parse.quote(entry.title) + '.md'
     file_path = os.path.join(posts_dir, file_name)
-    # file_name = file_name.replace('/', '-')  # replace slash with hyphen
-    # file_name = file_name.replace('\\', '-')  # replace back slash with hyphen
-    
-    # Replace any additional characters if necessary
-    file_name += '.md'
-    file_path = os.path.join(posts_dir, file_name)
 
-    # Create file if not exists
+    # Create file if it doesn't exist
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-             # Add front matter with original title
-            escaped_title = entry.title.replace('"', '\\"')
+            # Add front matter with original title
             front_matter = f"---\n"
-            front_matter += f"title: \"{escaped_title}\"\n"
+            front_matter += f'title: "{entry.title}"\n'
             front_matter += f"date: {entry.published}\n"
             front_matter += f"---\n\n"
             content = entry.description
             file.write(front_matter + content)  # Write contents into file
-            # file.write(entry.description)  # Write contents into file
+
         # Commit on GitHub
         repo.git.add(file_path)
         repo.git.commit('-m', f'Add post: {entry.title}')
