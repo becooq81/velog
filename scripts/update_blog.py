@@ -35,7 +35,7 @@ for entry in feed.entries:
 
     # Create file if it doesn't exist
     if not os.path.exists(file_path):
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w', encoding='euc_kr') as file:
             # Properly escape special characters in the title
             escaped_title = entry.title.replace(':', '&#58;').replace("'", '&#39;').replace('"', '&quot;')
             
