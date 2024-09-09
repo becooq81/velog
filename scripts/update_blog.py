@@ -1,7 +1,7 @@
 import feedparser
 import git
 import os
-import urllib.parse  # Import URL encoding library
+import urllib.parse
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -37,7 +37,7 @@ for entry in feed.entries:
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
             # Properly escape special characters in the title
-            escaped_title = entry.title.replace(':', '&#58;').replace("'", "&#39;").replace('"', '&quot;')
+            escaped_title = entry.title.replace(':', '&#58;').replace("'", '&#39;').replace('"', '&quot;')
             
             # Add front matter with escaped title
             front_matter = f"---\n"
