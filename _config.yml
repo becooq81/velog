@@ -2,6 +2,6 @@ title: Code with Jinny
 description: Tech Blog
 baseurl: "" # Leave it empty if the blog is at the root
 url: "https://becooq81.github.io/velog" # Replace with your GitHub Pages URL
-theme: jekyll-theme-minimal # You can use any GitHub Pages compatible theme
+theme: jekyll-theme-cayman # You can use any GitHub Pages compatible theme
 plugins:
   - jekyll-feed
