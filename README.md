@@ -14,12 +14,6 @@ The content of this repository is based on [rimgosu/velog](https://github.com/ri
 - **Automatic Updates**: Scheduled to run daily to check for new posts.
 - **Commits and Pushes**: Commits new posts and pushes changes to GitHub.
 
-## Prerequisites
-
-- Python 3.x
-- GitPython
-- Feedparser
-
 ## Setup
 
 ### 1. Clone the Repository
