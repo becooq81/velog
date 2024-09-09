@@ -1,7 +1,7 @@
 import feedparser
 import git
 import os
-import urllib.parse
+import urllib.parse  # Import URL encoding library
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -30,12 +30,14 @@ feed = feedparser.parse(rss_url)
 # Save each post as a file and commit
 for entry in feed.entries:
     # URL-encode the title to create a valid file name
-    file_name = urllib.parse.quote(entry.title) + '.md'
+    # Ensure that the title is encoded using UTF-8
+    file_name = urllib.parse.quote(entry.title.encode('utf-8'))
+    file_name += '.md'
     file_path = os.path.join(posts_dir, file_name)
 
     # Create file if it doesn't exist
     if not os.path.exists(file_path):
-        with open(file_path, 'w', encoding='euc_kr') as file:
+        with open(file_path, 'w', encoding='utf-8') as file:
             # Properly escape special characters in the title
             escaped_title = entry.title.replace(':', '&#58;').replace("'", '&#39;').replace('"', '&quot;')
             
