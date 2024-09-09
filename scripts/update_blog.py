@@ -1,6 +1,7 @@
 import feedparser
 import git
 import os
+from git.exc import GitCommandError
 
 # 벨로그 RSS 피드 URL
 rss_url = 'https://api.velog.io/rss/@becooq81'
@@ -18,6 +19,10 @@ if not os.path.exists(posts_dir):
 # 레포지토리 로드
 repo = git.Repo(repo_path)
 
+# Git 설정 확인 및 설정
+repo.git.config('--global', 'user.name', 'github-actions[bot]')
+repo.git.config('--global', 'user.email', 'github-actions[bot]@users.noreply.github.com')
+
 # RSS 피드 파싱
 feed = feedparser.parse(rss_url)
 
@@ -33,12 +38,24 @@ for entry in feed.entries:
 
     # 파일이 이미 존재하지 않으면 생성
     if not os.path.exists(file_path):
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(entry.description)  # 글 내용을 파일에 작성
+        try:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(entry.description)  # 글 내용을 파일에 작성
 
-        # 깃허브 커밋
-        repo.git.add(file_path)
-        repo.git.commit('-m', f'Add post: {entry.title}')
+            # 깃허브 커밋
+            repo.git.add(file_path)
+            try:
+                repo.git.commit('-m', f'Add post: {entry.title}')
+            except GitCommandError as e:
+                if 'nothing to commit' in str(e):
+                    print(f'No changes to commit for {file_name}')
+                else:
+                    raise
+        except Exception as e:
+            print(f'Error processing {file_name}: {e}')
 
 # 변경 사항을 깃허브에 푸시
-repo.git.push()
+try:
+    repo.git.push()
+except GitCommandError as e:
+    print(f'Error pushing changes: {e}')
