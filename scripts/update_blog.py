@@ -10,7 +10,7 @@ rss_url = 'https://api.velog.io/rss/@becooq81'
 repo_path = '.'
 
 # 'velog-posts' directory path
-posts_dir = os.path.join(repo_path, 'velog-posts')
+posts_dir = os.path.join(repo_path, '_posts')
 
 # Create 'velog-posts' if directory does not exist
 if not os.path.exists(posts_dir):
