@@ -3,10 +3,5 @@ description: Tech Blog
 baseurl: "" # Leave it empty if the blog is at the root
 url: "https://becooq81.github.io/velog" # Replace with your GitHub Pages URL
 theme: jekyll-theme-minimal # You can use any GitHub Pages compatible theme
-
-# Specify the encoding for your files
-encoding: "euc_kr"
-
-# Plugins used for the site
 plugins:
   - jekyll-feed
