@@ -1,4 +1,4 @@
-# velog-update
+# Velog
 
 
 ## Overview
