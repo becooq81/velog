@@ -5,7 +5,7 @@ url: "https://becooq81.github.io/velog" # Replace with your GitHub Pages URL
 theme: jekyll-theme-minimal # You can use any GitHub Pages compatible theme
 
 # Specify the encoding for your files
-encoding: "utf-8"
+encoding: "euc_kr"
 
 # Plugins used for the site
 plugins:
