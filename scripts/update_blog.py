@@ -1,8 +1,6 @@
 import feedparser
 import git
 import os
-import urllib.parse
-from datetime import datetime, timezone, timedelta
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -11,13 +9,13 @@ rss_url = 'https://api.velog.io/rss/@becooq81'
 # GitHub repository path
 repo_path = '.'
 
-# '_posts' directory path
-posts_dir = os.path.join(repo_path, '_posts')
+# 'velog-posts' directory path
+posts_dir = os.path.join(repo_path, 'velog-posts')
 
-# Create '_posts' if directory does not exist
+# Create 'velog-posts' if directory does not exist
 if not os.path.exists(posts_dir):
     os.makedirs(posts_dir)
-
+    
 # Load repository
 repo = git.Repo(repo_path)
 
@@ -30,40 +28,24 @@ feed = feedparser.parse(rss_url)
 
 # Save each post as a file and commit
 for entry in feed.entries:
-    # Parse date string with datetime
-    published_date_str = entry.published
-    try:
-        # Handle various date formats
-        published_date = datetime.strptime(published_date_str, '%a, %d %b %Y %H:%M:%S %Z')
-        # If timezone information is needed, manually set UTC
-        published_date = published_date.replace(tzinfo=timezone.utc)
-    except ValueError:
-        print(f"Date format error for entry published date: {published_date_str}")
-        continue
-
-    date_str = published_date.strftime('%Y-%m-%d')
-
-    # URL-encode the title to create a valid file name
-    file_name = urllib.parse.quote(entry.title.encode('utf-8'))
-    file_name = file_name.replace('%', '-')  # Replace '%' with '-' for file name safety
-    file_name = f"{date_str}-{file_name}.md"
     
+    # Remove or replace invalid characters from file's name
+    file_name = entry.title
+    file_name = file_name.replace('/', '-')  # replace slash with hyphen
+    file_name = file_name.replace('\\', '-')  # replace back slash with hyphen
+    
+    # Replace any additional characters if necessary
+    file_name += '.md'
     file_path = os.path.join(posts_dir, file_name)
-
-    # Create file if it doesn't exist
+    
+    # Create file if not exists
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-            escaped_title = entry.title.replace(':', '&#58;').replace("'", '&#39;').replace('"', '&quot;')
-            front_matter = f"---\n"
-            front_matter += f'title: "{escaped_title}"\n'
-            front_matter += f"date: {published_date.isoformat()}\n"
-            front_matter += f"---\n\n"
-            content = entry.description
-            file.write(front_matter + content)
-
+            file.write(entry.description)  # Write contents into file
+        
         # Commit on GitHub
         repo.git.add(file_path)
         repo.git.commit('-m', f'Add post: {entry.title}')
-
+        
 # Push changes to repository
 repo.git.push()
