@@ -1,6 +1,7 @@
 import feedparser
 import git
 import os
+import urllib.parse
 from git.exc import GitCommandError
 
 # Velog RSS feed URL
@@ -40,7 +41,14 @@ for entry in feed.entries:
     # Create file if not exists
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(entry.description)  # Write contents into file
+             # Add front matter with original title
+            front_matter = f"---\n"
+            front_matter += f"title: \"{entry.title}\"\n"
+            front_matter += f"date: {entry.published}\n"
+            front_matter += f"---\n\n"
+            content = entry.description
+            file.write(front_matter + content)  # Write contents into file
+            # file.write(entry.description)  # Write contents into file
         # Commit on GitHub
         repo.git.add(file_path)
         repo.git.commit('-m', f'Add post: {entry.title}')
