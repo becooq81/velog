@@ -3,47 +3,47 @@ import git
 import os
 from git.exc import GitCommandError
 
-# 벨로그 RSS 피드 URL
+# Velog RSS feed URL
 rss_url = 'https://api.velog.io/rss/@becooq81'
 
-# 깃허브 레포지토리 경로
+# GitHub repository path
 repo_path = '.'
 
-# 'velog-posts' 폴더 경로
+# 'velog-posts' directory path
 posts_dir = os.path.join(repo_path, 'velog-posts')
 
-# 'velog-posts' 폴더가 없다면 생성
+# Create 'velog-posts' if directory does not exist
 if not os.path.exists(posts_dir):
     os.makedirs(posts_dir)
 
-# 레포지토리 로드
+# Load repository
 repo = git.Repo(repo_path)
 
-# Git 설정 확인 및 설정
+# Double check git configuration
 repo.git.config('--global', 'user.name', 'github-actions[bot]')
 repo.git.config('--global', 'user.email', 'github-actions[bot]@users.noreply.github.com')
 
-# RSS 피드 파싱
+# Parse RSS feed
 feed = feedparser.parse(rss_url)
 
-# 각 글을 파일로 저장하고 커밋
+# Save each post as a file and commit
 for entry in feed.entries:
-    # 파일 이름에서 유효하지 않은 문자 제거 또는 대체
+    # Remove or replace invalid characters from file's name
     file_name = entry.title
-    file_name = file_name.replace('/', '-')  # 슬래시를 대시로 대체
-    file_name = file_name.replace('\\', '-')  # 백슬래시를 대시로 대체
-    # 필요에 따라 추가 문자 대체
+    file_name = file_name.replace('/', '-')  # replace slash with hyphen
+    file_name = file_name.replace('\\', '-')  # replace back slash with hyphen
+    
+    # Replace any additional characters if necessary
     file_name += '.md'
     file_path = os.path.join(posts_dir, file_name)
 
-    # 파일이 이미 존재하지 않으면 생성
+    # Create file if not exists
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(entry.description)  # 글 내용을 파일에 작성
-
-        # 깃허브 커밋
+            file.write(entry.description)  # Write contents into file
+        # Commit on GitHub
         repo.git.add(file_path)
         repo.git.commit('-m', f'Add post: {entry.title}')
 
-# 변경 사항을 깃허브에 푸시
+# Push changes to repository
 repo.git.push()
