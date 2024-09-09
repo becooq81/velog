@@ -30,9 +30,10 @@ feed = feedparser.parse(rss_url)
 # Save each post as a file and commit
 for entry in feed.entries:
     # Remove or replace invalid characters from file's name
-    file_name = entry.title
-    file_name = file_name.replace('/', '-')  # replace slash with hyphen
-    file_name = file_name.replace('\\', '-')  # replace back slash with hyphen
+    file_name = urllib.parse.quote(entry.title) + '.md'
+    file_path = os.path.join(posts_dir, file_name)
+    # file_name = file_name.replace('/', '-')  # replace slash with hyphen
+    # file_name = file_name.replace('\\', '-')  # replace back slash with hyphen
     
     # Replace any additional characters if necessary
     file_name += '.md'
@@ -42,8 +43,9 @@ for entry in feed.entries:
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
              # Add front matter with original title
+            escaped_title = entry.title.replace('"', '\\"')
             front_matter = f"---\n"
-            front_matter += f"title: \"{entry.title}\"\n"
+            front_matter += f"title: \"{escaped_title}\"\n"
             front_matter += f"date: {entry.published}\n"
             front_matter += f"---\n\n"
             content = entry.description
