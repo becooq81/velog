@@ -1,27 +1,19 @@
 name: Update Blog Posts
-  
 
 on:
   push:
-      branches:
-        - main 
+    branches:
+      - main
   schedule:
-    - cron: '0 0 * * *'  # 매일 자정에 실행
+    - cron: '0 0 * * *'  # Runs daily at midnight
 
 jobs:
   update_blog:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout repository
       uses: actions/checkout@v2
-
-    - name: Push changes
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git push https://${{ secrets.GH_PAT }}@github.com/becooq81/velog.git
-        
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -32,5 +24,21 @@ jobs:
       run: |
         pip install feedparser gitpython
 
-    - name: Run script
+    - name: Run update script
       run: python scripts/update_blog.py
+
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+    - name: Commit changes
+      run: |
+        git add .
+        git commit -m "Update blog posts" || echo "No changes to commit"
+
+    - name: Push changes
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git push https://${GH_PAT}@github.com/becooq81/velog-update.git
