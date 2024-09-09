@@ -1,7 +1,7 @@
 import feedparser
 import git
 import os
-import urllib.parse  # Import URL encoding library
+import urllib.parse
 from datetime import datetime
 from git.exc import GitCommandError
 
@@ -30,12 +30,19 @@ feed = feedparser.parse(rss_url)
 
 # Save each post as a file and commit
 for entry in feed.entries:
-    # Extract and format the date
-    published_date = datetime.strptime(entry.published, '%a, %d %b %Y %H:%M:%S %z')
+    # Adjust format for GMT
+    published_date_str = entry.published
+    try:
+        published_date = datetime.strptime(published_date_str, '%a, %d %b %Y %H:%M:%S %Z')
+        # Manually adjust timezone to UTC
+        published_date = published_date.replace(tzinfo=datetime.timezone.utc)
+    except ValueError:
+        print(f"Date format error for entry published date: {published_date_str}")
+        continue
+
     date_str = published_date.strftime('%Y-%m-%d')
     
     # URL-encode the title to create a valid file name
-    # Ensure that the title is encoded using UTF-8
     file_name = urllib.parse.quote(entry.title.encode('utf-8'))
     file_name = file_name.replace('%', '-')  # Replace '%' with '-' for file name safety
     file_name = f"{date_str}-{file_name}.md"
@@ -45,16 +52,13 @@ for entry in feed.entries:
     # Create file if it doesn't exist
     if not os.path.exists(file_path):
         with open(file_path, 'w', encoding='utf-8') as file:
-            # Properly escape special characters in the title
             escaped_title = entry.title.replace(':', '&#58;').replace("'", '&#39;').replace('"', '&quot;')
-            
-            # Add front matter with escaped title
             front_matter = f"---\n"
             front_matter += f'title: "{escaped_title}"\n'
-            front_matter += f"date: {entry.published}\n"
+            front_matter += f"date: {published_date.isoformat()}\n"
             front_matter += f"---\n\n"
             content = entry.description
-            file.write(front_matter + content)  # Write contents into file
+            file.write(front_matter + content)
 
         # Commit on GitHub
         repo.git.add(file_path)
