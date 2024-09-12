@@ -10,6 +10,7 @@ The content of this repository is based on [rimgosu/velog](https://github.com/ri
 ## Features
 
 - **Fetches Posts**: Retrieves posts from a Velog RSS feed.
+- **Translates Titles**: Translates Korean titles to English based on Google Translate (Saves original title with hash to avoid duplicate posts)
 - **Saves as Markdown**: Converts the posts to Markdown files.
 - **Automatic Updates**: Scheduled to run daily to check for new posts.
 - **Commits and Pushes**: Commits new posts and pushes changes to GitHub.
