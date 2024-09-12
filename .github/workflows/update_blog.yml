@@ -32,4 +32,4 @@ jobs:
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
-        git push https://${GH_PAT}@github.com/TIL-challenge/becooq81.git
+        git push https://${GH_PAT}@github.com/becooq81/velog.git
