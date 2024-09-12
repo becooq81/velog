@@ -17,7 +17,7 @@ jobs:
         python-version: '3.x'
     - name: Install dependencies
       run: |
-        pip install feedparser gitpython
+        pip install feedparser gitpython googletrans==4.0.0-rc1
     - name: Run update script
       run: python scripts/update_blog.py
     - name: Configure Git
@@ -32,4 +32,4 @@ jobs:
       env:
         GH_PAT: ${{ secrets.GH_PAT }}
       run: |
-        git push https://${GH_PAT}@github.com/becooq81/velog.git
+        git push https://${GH_PAT}@github.com/TIL-challenge/becooq81.git
