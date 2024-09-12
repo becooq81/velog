@@ -20,8 +20,8 @@ The content of this repository is based on [rimgosu/velog](https://github.com/ri
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/becooq81/velog-update.git
-cd velog-update
+git clone https://github.com/becooq81/velog.git
+cd velog
 ```
 
 ### 2. Configure the RSS Feed
