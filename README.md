@@ -5,7 +5,7 @@
 
 This repository contains a Python script for automatically updating a blog with posts from a Velog RSS feed. The script fetches new posts from the RSS feed and saves them as Markdown files in the repository. It then commits and pushes these updates to GitHub.
 
-The content of this repository is based on [rimgosu/velog](https://github.com/rimgosu/velog), with modifications made for improved readability and instructions.
+The content of this repository is based on [rimgosu/velog](https://github.com/rimgosu/velog), with modifications made for improved readability and features.
 
 ## Features
 
