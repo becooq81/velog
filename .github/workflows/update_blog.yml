@@ -4,7 +4,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight
+    - cron: '59 23 * * *'  # Runs daily at 11:59 PM
 jobs:
   update_blog:
     runs-on: ubuntu-latest
