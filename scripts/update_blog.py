@@ -2,6 +2,7 @@ import feedparser
 import git
 import os
 import hashlib
+import json
 from git.exc import GitCommandError
 from googletrans import Translator
 
@@ -15,12 +16,15 @@ rss_url = 'https://api.velog.io/rss/@becooq81'
 repo_path = '.'
 
 # 'velog-posts' directory path
-posts_dir = os.path.join(repo_path, '_posts')
+posts_dir = os.path.join(repo_path, 'velog-posts')
+
+# File to store processed content hashes
+hash_file_path = os.path.join(repo_path, 'processed_hashes.json')
 
 # Create 'velog-posts' if directory does not exist
 if not os.path.exists(posts_dir):
     os.makedirs(posts_dir)
-    
+
 # Load repository
 repo = git.Repo(repo_path)
 
@@ -36,6 +40,8 @@ def process_title(title):
     title = title.replace('/', '-')  # Replace slash with hyphen
     title = title.replace('\\', '-')  # Replace backslash with hyphen
     title = title.replace(' ', '-')  # Replace space with hyphen
+    title = title.replace('.', '')  # Remove periods
+    title = title.replace(',', '')  # Remove commas
     title += '.md'
     return title
 
@@ -43,8 +49,12 @@ def process_title(title):
 def generate_content_hash(content):
     return hashlib.md5(content.encode('utf-8')).hexdigest()
 
-# Track content hashes to avoid redundant uploads
-processed_hashes = {}
+# Load the processed hashes from file if it exists
+if os.path.exists(hash_file_path):
+    with open(hash_file_path, 'r', encoding='utf-8') as hash_file:
+        processed_hashes = json.load(hash_file)
+else:
+    processed_hashes = {}
 
 # Save each post as a file and commit
 for entry in feed.entries:
@@ -95,3 +105,7 @@ for entry in feed.entries:
         
 # Push changes to repository
 repo.git.push()
+
+# Save the updated processed hashes to file
+with open(hash_file_path, 'w', encoding='utf-8') as hash_file:
+    json.dump(processed_hashes, hash_file, ensure_ascii=False, indent=4)
