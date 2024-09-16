@@ -3,7 +3,6 @@ import git
 import os
 import hashlib
 import json
-from git.exc import GitCommandError
 from googletrans import Translator
 
 # Initialize the Google Translate API
@@ -20,6 +19,9 @@ posts_dir = os.path.join(repo_path, 'velog-posts')
 
 # File to store processed content hashes
 hash_file_path = os.path.join(repo_path, 'processed_hashes.json')
+
+# File to store original titles to translated title mappings
+translation_cache_path = os.path.join(repo_path, 'title_translation_cache.json')
 
 # Create 'velog-posts' if directory does not exist
 if not os.path.exists(posts_dir):
@@ -56,16 +58,30 @@ if os.path.exists(hash_file_path):
 else:
     processed_hashes = {}
 
+# Load the translation cache if it exists
+if os.path.exists(translation_cache_path):
+    with open(translation_cache_path, 'r', encoding='utf-8') as cache_file:
+        translation_cache = json.load(cache_file)
+else:
+    translation_cache = {}
+
 # Save each post as a file and commit
 for entry in feed.entries:
     
-    # Detect the language of the title
-    detected_language = translator.detect(entry.title).lang
-    
-    # Translate title to English if the detected language is Korean
-    translated_title = entry.title  # Default to original title
-    if detected_language == 'ko':
-        translated_title = translator.translate(entry.title, src='ko', dest='en').text
+    # Check if the title has already been translated and cached
+    if entry.title in translation_cache:
+        translated_title = translation_cache[entry.title]
+    else:
+        # Detect the language of the title
+        detected_language = translator.detect(entry.title).lang
+        
+        # Translate title to English if needed
+        translated_title = entry.title  # Default to original title
+        if detected_language == 'ko':  # Assuming title is in Korean
+            translated_title = translator.translate(entry.title, src='ko', dest='en').text
+        
+        # Cache the translation to ensure consistency across runs
+        translation_cache[entry.title] = translated_title
 
     # Process translated title to create a valid filename
     translated_name = process_title(translated_title)
@@ -76,14 +92,17 @@ for entry in feed.entries:
     # Generate a hash of the original content
     content_hash = generate_content_hash(entry.description)
 
-    # Check if this content hash has already been processed
-    if content_hash in processed_hashes:
-        # Skip to avoid redundant uploads
-        print(f"Skipping already processed post: {entry.title}")
-        continue
-    
-    # If content is new, mark it as processed
-    processed_hashes[content_hash] = translated_name
+    # Check if the post (by translated title) has already been processed
+    if translated_name in processed_hashes:
+        # If the content has not changed, skip the update
+        if processed_hashes[translated_name] == content_hash:
+            print(f"Skipping unchanged post: {translated_title}")
+            continue
+    else:
+        print(f"Processing new or updated post: {translated_title}")
+
+    # If content is new or updated, mark it as processed
+    processed_hashes[translated_name] = content_hash
 
     # Check if the file exists and if its content has changed
     content_changed = True
@@ -101,7 +120,7 @@ for entry in feed.entries:
 
         # Stage and commit the changes
         repo.git.add(file_path)
-        repo.git.commit('-m', f'Add or update post: {translated_name}')
+        repo.git.commit('-m', f'Add or update post: {translated_title}')
         
 # Push changes to repository
 repo.git.push()
@@ -109,3 +128,7 @@ repo.git.push()
 # Save the updated processed hashes to file
 with open(hash_file_path, 'w', encoding='utf-8') as hash_file:
     json.dump(processed_hashes, hash_file, ensure_ascii=False, indent=4)
+
+# Save the updated title translation cache to file
+with open(translation_cache_path, 'w', encoding='utf-8') as cache_file:
+    json.dump(translation_cache, cache_file, ensure_ascii=False, indent=4)
