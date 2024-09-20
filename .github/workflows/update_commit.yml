@@ -1,0 +1,81 @@
+name: Update Commit Activity Badges
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * 0'  # Runs weekly on Sunday
+  workflow_dispatch:  # Allows manual run
+
+jobs:
+  update-commit-badges:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          ref: main  # Ensure this matches your working branch
+          persist-credentials: true  # Ensure GitHub token is used
+          fetch-depth: 0 # Fetch all history for all branches and tags
+      - name: Setup Git Config
+        run: |
+          git config --global user.email "github-actions[bot]@github.com"
+          git config --global user.name "github-actions[bot]"
+
+      - name: Count Total Commit Days
+        id: total_commit_days
+        run: |
+          # Display all unique commit dates in the entire history
+          echo "All unique commit dates in the entire history:"
+          git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u
+          
+          # Count total unique commit days in the entire history
+          total_days=$(git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u | wc -l)
+          echo "Total commit days found: $total_days"
+          echo "total_commit_days=$total_days" >> $GITHUB_ENV
+
+      - name: Count Weekly Commit Days
+        id: weekly_commit_days
+        run: |
+          # Display unique commit dates within the last 7 days
+          echo "Unique commit dates in the last 7 days:"
+          git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' | sort -u
+          
+          # Count unique commit days in the last 7 days
+          weekly_days=$(git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' | sort -u | wc -l)
+          echo "Weekly commit days found: $weekly_days"
+          echo "weekly_commit_days=$weekly_days" >> $GITHUB_ENV
+
+      - name: Create Badges
+        run: |
+          # Create badge URLs with cache-busting parameter to force refresh
+          total_badge_url="https://img.shields.io/badge/total_commit_days-${{ env.total_commit_days }}-blue?cache=$(date +%s)"
+          weekly_badge_url="https://img.shields.io/badge/weekly_commit_days-${{ env.weekly_commit_days }}-green?cache=$(date +%s)"
+          echo "Total Badge URL: $total_badge_url"
+          echo "Weekly Badge URL: $weekly_badge_url"
+          echo "![Total Commit Days]($total_badge_url)" > total_commit_badge.md
+          echo "![Weekly Commit Days]($weekly_badge_url)" > weekly_commit_badge.md
+
+      - name: Update README with Badges at Top
+        run: |
+          # Remove old badge lines if they exist and prepend new badges to the top of README
+          sed -i '/Total Commit Days/d' README.md
+          sed -i '/Weekly Commit Days/d' README.md
+          # Insert badges at the top of the README
+          cat total_commit_badge.md weekly_commit_badge.md README.md > temp_readme.md
+          mv temp_readme.md README.md  # Replace the old README with the updated one
+
+      - name: Commit Changes
+        run: |
+          git add README.md
+          git status  # Check if changes are staged correctly
+          git commit -m "Update commit days badges"
+
+      - name: Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}  # Ensure this token has push permissions
+        run: |
+          # Push changes back to GitHub using the PAT
+          git push https://x-access-token:${GH_PAT}@github.com/TIL-challenge/becooq81.git
