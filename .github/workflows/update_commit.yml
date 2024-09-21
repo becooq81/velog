@@ -78,4 +78,4 @@ jobs:
           GH_PAT: ${{ secrets.GH_PAT }}  # Ensure this token has push permissions
         run: |
           # Push changes back to GitHub using the PAT
-          git push https://x-access-token:${GH_PAT}@github.com/TIL-challenge/becooq81.git
+          git push https://x-access-token:${GH_PAT}@github.com/becooq81/velog.git
