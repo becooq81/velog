@@ -18,8 +18,8 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 0 * * 0'  # 매주 일요일에 자동 런한다
-  workflow_dispatch:  # 매뉴얼로 런할 수 있음
+    - cron: '59 23 * * *'
+  workflow_dispatch:
 
 jobs:
   update-commit-badges:
@@ -29,9 +29,10 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v2
         with:
-          ref: main  
-          persist-credentials: true  
-          fetch-depth: 0 # 모든 브랜치 및 태그에 대해 모든 커밋 로그를 확인한다
+          ref: main
+          persist-credentials: true
+          fetch-depth: 0
+
       - name: Setup Git Config
         run: |
           git config --global user.email &quot;github-actions[bot]@github.com&quot;
@@ -40,59 +41,58 @@ jobs:
       - name: Count Total Commit Days
         id: total_commit_days
         run: |
-          # 전체 커밋 로그의 커밋 날짜를 출력한다
-
-          echo &quot;All unique commit dates in the entire history:&quot;
           git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u
-
-          # 전체 커밋 로그의 유니크 날짜 수를 저장한다
-
           total_days=$(git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u | wc -l)
-          echo &quot;Total commit days found: $total_days&quot;
           echo &quot;total_commit_days=$total_days&quot; &gt;&gt; $GITHUB_ENV
 
       - name: Count Weekly Commit Days
         id: weekly_commit_days
         run: |
-          # 지난 7일 중 커밋 로그에 존재하는 유니크 날짜를 저장한다
-
-          echo &quot;Unique commit dates in the last 7 days:&quot;
           git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' | sort -u
-
-          # 지난 7일 중 커밋 로그에 존재하는 유니크 날짜의 수를 저장한다
-
-          weekly_days=$(git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' | sort -u | wc -l)
-          echo &quot;Weekly commit days found: $weekly_days&quot;
+          weekly_days=$(git log --since='7 days ago' --format='%Y-%m-%d' | sort -u | wc -l)
           echo &quot;weekly_commit_days=$weekly_days&quot; &gt;&gt; $GITHUB_ENV
 
       - name: Create Badges
         run: |
-          # cache-busting 인자로 리프레시를 강제하는 뱃지 URL를 생성한다
-
           total_badge_url=&quot;https://img.shields.io/badge/total_commit_days-${{ env.total_commit_days }}-blue?cache=$(date +%s)&quot;
           weekly_badge_url=&quot;https://img.shields.io/badge/weekly_commit_days-${{ env.weekly_commit_days }}-green?cache=$(date +%s)&quot;
-          echo &quot;Total Badge URL: $total_badge_url&quot;
-          echo &quot;Weekly Badge URL: $weekly_badge_url&quot;
           echo &quot;![Total Commit Days]($total_badge_url)&quot; &gt; total_commit_badge.md
           echo &quot;![Weekly Commit Days]($weekly_badge_url)&quot; &gt; weekly_commit_badge.md
 
       - name: Update README with Badges at Top
         run: |
-          # 이미 뱃지가 있다면 없애고 리드미 맨 앞에 뱃지를 추가한다
-
           sed -i '/Total Commit Days/d' README.md
           sed -i '/Weekly Commit Days/d' README.md
           cat total_commit_badge.md weekly_commit_badge.md README.md &gt; temp_readme.md
-          mv temp_readme.md README.md  # Replace the old README with the updated one
+          mv temp_readme.md README.md
+
+      - name: Stash Changes (if any) before Pull
+        run: |
+          git add .
+          git stash save &quot;temp-stash-for-pull&quot; || echo &quot;Nothing to stash&quot;
+
+      - name: Pull Latest Changes
+        run: |
+          git pull origin main --rebase || echo &quot;Rebase failed, attempting to continue&quot;
+
+      - name: Apply Stash (if any)
+        run: |
+          git stash pop || echo &quot;No stash to apply&quot;
 
       - name: Commit Changes
         run: |
           git add README.md
-          git status  
-          git commit -m &quot;Update commit days badges&quot;
+          git commit -m &quot;Update commit days badges&quot; || echo &quot;No changes to commit&quot;
+
+      - name: Fetch Latest Changes Before Pushing
+        run: |
+          # Fetch latest changes to ensure we're up to date
+          git fetch origin main
+          git rebase origin/main || echo &quot;Rebase failed, attempting to resolve automatically&quot;
+          git rebase --continue || echo &quot;No rebase to continue&quot;
 
       - name: Push Changes
         env:
-          GH_PAT: ${{ secrets.GH_PAT }}  # Ensure this token has push permissions
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git push https://x-access-token:${GH_PAT}@github.com/{username}/{repository}.git</code></pre>
+          git push https://x-access-token:${GH_PAT}@github.com/TIL-challenge/becooq81.git || echo &quot;Push failed, trying to resolve&quot;</code></pre>
