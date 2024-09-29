@@ -11,6 +11,7 @@
 <p>TIL할 레포지토리의 <code>Settings</code> &gt; <code>Secrets and Variables</code> &gt; <code>Actions</code> 에서 <code>GH_PAT</code>라는 이름의 시크릿을 생성하고, 값에 복사해둔 토큰을 붙여넣는다</p>
 <h1 id="2-github-workflow를-추가한다">2. GitHub Workflow를 추가한다</h1>
 <p><code>.github/workflows/update_commit.yml</code>을 생성하고 다음을 복사한 후, github url을 적절하게 넣는다</p>
+<p>커밋을 세고 반영하는 커밋은 반영되지 않도록 필터 로직을 추가했다</p>
 <pre><code class="language-yml">name: Update Commit Activity Badges
 
 on:
@@ -38,19 +39,18 @@ jobs:
           git config --global user.email &quot;github-actions[bot]@github.com&quot;
           git config --global user.name &quot;github-actions[bot]&quot;
 
-      - name: Count Total Commit Days
+      - name: Count Total Commit Days (Exclude Badge Update Commits)
         id: total_commit_days
         run: |
-          git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u
-          total_days=$(git log --format='%cd' --date=format:'%Y-%m-%d' | sort -u | wc -l)
+          total_days=$(git log --format='%cd' --date=format:'%Y-%m-%d' --grep='badge' --invert-grep | sort -u | wc -l)
           echo &quot;total_commit_days=$total_days&quot; &gt;&gt; $GITHUB_ENV
 
-      - name: Count Weekly Commit Days
+      - name: Count Weekly Commit Days (Exclude Badge Update Commits)
         id: weekly_commit_days
         run: |
-          git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' | sort -u
-          weekly_days=$(git log --since='7 days ago' --format='%Y-%m-%d' | sort -u | wc -l)
+          weekly_days=$(git log --since='7 days ago' --format='%cd' --date=format:'%Y-%m-%d' --grep='badge' --invert-grep | sort -u | wc -l)
           echo &quot;weekly_commit_days=$weekly_days&quot; &gt;&gt; $GITHUB_ENV
+
 
       - name: Create Badges
         run: |
@@ -61,15 +61,18 @@ jobs:
 
       - name: Update README with Badges at Top
         run: |
-          sed -i '/Total Commit Days/d' README.md
-          sed -i '/Weekly Commit Days/d' README.md
+          # Safely remove existing badge lines
+          sed -i '/Total Commit Days/d' README.md || echo &quot;No Total Commit Days badge found to remove&quot;
+          sed -i '/Weekly Commit Days/d' README.md || echo &quot;No Weekly Commit Days badge found to remove&quot;
+
+          # Combine badges and the rest of the README
           cat total_commit_badge.md weekly_commit_badge.md README.md &gt; temp_readme.md
           mv temp_readme.md README.md
 
       - name: Stash Changes (if any) before Pull
         run: |
           git add .
-          git stash save &quot;temp-stash-for-pull&quot; || echo &quot;Nothing to stash&quot;
+          git stash push -m &quot;temp-stash-for-pull&quot; || echo &quot;Nothing to stash&quot;
 
       - name: Pull Latest Changes
         run: |
@@ -79,14 +82,13 @@ jobs:
         run: |
           git stash pop || echo &quot;No stash to apply&quot;
 
-      - name: Commit Changes
+      - name: Commit Changes with Identifier
         run: |
           git add README.md
-          git commit -m &quot;Update commit days badges&quot; || echo &quot;No changes to commit&quot;
+          git commit -m &quot;Update commit days badges [badge-update]&quot; || echo &quot;No changes to commit&quot;
 
       - name: Fetch Latest Changes Before Pushing
         run: |
-          # Fetch latest changes to ensure we're up to date
           git fetch origin main
           git rebase origin/main || echo &quot;Rebase failed, attempting to resolve automatically&quot;
           git rebase --continue || echo &quot;No rebase to continue&quot;
@@ -95,4 +97,5 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git push https://x-access-token:${GH_PAT}@github.com/TIL-challenge/becooq81.git || echo &quot;Push failed, trying to resolve&quot;</code></pre>
+          git push https://x-access-token:${GH_PAT}@github.com/TIL-challenge/becooq81.git || echo &quot;Push failed, trying to resolve&quot;
+</code></pre>
