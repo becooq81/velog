@@ -1,5 +1,5 @@
-![Total Commit Days](https://img.shields.io/badge/total_commit_days-73-blue?cache=1754186540)
-![Weekly Commit Days](https://img.shields.io/badge/weekly_commit_days-0-green?cache=1754186540)
+![Total Commit Days](https://img.shields.io/badge/total_commit_days-74-blue?cache=1754791127)
+![Weekly Commit Days](https://img.shields.io/badge/weekly_commit_days-1-green?cache=1754791127)
 # Velog
 
 
