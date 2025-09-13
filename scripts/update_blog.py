@@ -3,7 +3,6 @@ import git
 import os
 import hashlib
 import json
-from git.exc import GitCommandError
 from googletrans import Translator
 
 # Initialize the Google Translate API
@@ -56,6 +55,9 @@ if os.path.exists(hash_file_path):
 else:
     processed_hashes = {}
 
+# Track whether there are new or updated posts
+has_changes = False
+
 # Save each post as a file and commit
 for entry in feed.entries:
     
@@ -84,27 +86,23 @@ for entry in feed.entries:
     
     # If content is new, mark it as processed
     processed_hashes[content_hash] = translated_name
+    has_changes = True
 
-    # Check if the file exists and if its content has changed
-    content_changed = True
-    new_content = entry.description
-    if os.path.exists(file_path):
-        with open(file_path, 'r', encoding='utf-8') as file:
-            existing_content = file.read()
-        if existing_content == new_content:
-            content_changed = False
-    
-    # Create or overwrite the file only if content has changed
-    if content_changed:
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write(new_content)  # Write the post content into the file
+    # Create or overwrite the file
+    with open(file_path, 'w', encoding='utf-8') as file:
+        file.write(entry.description)
 
-        # Stage and commit the changes
-        repo.git.add(file_path)
-        repo.git.commit('-m', f'Add or update post: {translated_name}')
-        
-# Push changes to repository
-repo.git.push()
+    # Stage the changes
+    repo.git.add(file_path)
+    print(f"Staged post: {translated_name}")
+
+# Commit and push only if there were changes
+if has_changes:
+    repo.git.commit('-m', 'Add or update new Velog posts')
+    repo.git.push()
+    print("Changes pushed to repository.")
+else:
+    print("No new posts to update.")
 
 # Save the updated processed hashes to file
 with open(hash_file_path, 'w', encoding='utf-8') as hash_file:
